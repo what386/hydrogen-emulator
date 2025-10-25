@@ -2,7 +2,7 @@ namespace Emulator.IO;
 
 public interface IDevice
 {
-    event EventHandler<InterruptEventArgs> RequestInterrupt;
+    event EventHandler<InterruptRequestedEventArgs> RequestInterrupt;
     event EventHandler<DeviceWriteEventArgs> WriteToPort;
     
     // Device receives notification when port is written to

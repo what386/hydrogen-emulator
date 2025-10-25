@@ -1,0 +1,6 @@
+
+src/Emulator/bin/
+src/Emulator/obj/
+
+tests/Emulator.Tests/bin/
+tests/Emulator.Tests/obj/

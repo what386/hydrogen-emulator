@@ -2,10 +2,21 @@ namespace Emulator.IO;
 
 public class InterruptEventArgs : EventArgs
 {
-    public byte Vector { get; set; }
-    public byte Data { get; set; }
+    public byte Vector;
+    public byte Port;
     
-    public InterruptEventArgs(byte vector = 0)
+    public InterruptEventArgs(byte port, byte vector = 0)
+    {
+        Port = port;
+        Vector = vector;
+    }
+}
+
+public class InterruptRequestedEventArgs : EventArgs
+{
+    public byte Vector { get; set; }
+    
+    public InterruptRequestedEventArgs(byte vector = 0)
     {
         Vector = vector;
     }
