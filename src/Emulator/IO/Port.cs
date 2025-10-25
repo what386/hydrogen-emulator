@@ -27,6 +27,30 @@ public class Port
         
         connectedDevice = null;
     }
+
+    public void StartDeviceAsync()
+    {
+        if (connectedDevice == null)
+            return;
+
+        _ = connectedDevice.StartAsync();
+    }
+
+    public async Task StopDeviceAsync()
+    {
+        if (connectedDevice == null)
+            return;
+        
+        try
+        {
+            // Wait max 10 seconds for device to stop
+            await connectedDevice.StopAsync().WaitAsync(TimeSpan.FromSeconds(10));
+        }
+        catch (TimeoutException)
+        {
+            Console.WriteLine("Warning: Device did not stop within 10 seconds, continuing anyway");
+        }
+    }
     
     // Forward the event unchanged
     private void OnDeviceInterrupt(object sender, InterruptRequestedEventArgs e) 
