@@ -4,7 +4,7 @@ public class ControlWord
 {
     // Flag register (8 bits)
     public const byte DEFAULTS = 0b00000000;
-    public byte Flags { get; private set; }
+    public byte flags { get; private set; }
 
     // Bit 4 is reserved
     public const byte ALT_CONDITIONS = 0b00000001;
@@ -16,13 +16,18 @@ public class ControlWord
     public const byte DEBUG_MODE = 0b01000000;
     public const byte KERNEL_MODE = 0b10000000;
 
-    public void ClearFlags() => Flags = 0;
+    public void ClearFlags() => flags = DEFAULTS;
 
-    private void SetFlag(byte flagMask, bool value)
+    public void SetFlag(byte flagMask, bool value)
     {
         if (value)
-            Flags |= flagMask;
+            flags |= flagMask;
         else
-            Flags &= (byte)~flagMask;
+            flags &= (byte)~flagMask;
+    }
+
+    public bool GetFlag(byte flagMask)
+    {
+        return (flags & flagMask) != 0;
     }
 }
