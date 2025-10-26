@@ -33,7 +33,7 @@ public class Port
         if (connectedDevice == null)
             return;
 
-        _ = connectedDevice.StartAsync();
+        connectedDevice.StartAsync();
     }
 
     public async Task StopDeviceAsync()

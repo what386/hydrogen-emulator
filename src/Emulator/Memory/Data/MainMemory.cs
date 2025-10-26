@@ -2,17 +2,20 @@ namespace Emulator.Memory.Data;
 
 public class MainMemory
 {
-    public const int MEMORY_SIZE = 65536;
-    public const int BANK_SIZE = 256;
-    
+    public const int MEMORY_SIZE = 65536; // 64 KiB
+    public const int BANK_SIZE = 256; // 256 bytes
+
     private readonly MemoryPool pool;
     private readonly MemoryBank bank;
 
     private int activePage = 0;
-    private ushort stackPointer = MEMORY_SIZE - 1;
+
+    // Stack grows downward
+    private ushort virtualStackPointer = 0;
+    private ushort physicalStackPointer => (ushort)(ushort.MaxValue - virtualStackPointer);
     
     public int ActivePage => activePage;
-    public int StackPointer => stackPointer;
+    public int StackPointer => virtualStackPointer;
     
     public MainMemory()
     {
@@ -33,21 +36,24 @@ public class MainMemory
 
     public void Push(byte data)
     {
-        SetPage(stackPointer / BANK_SIZE);
-        bank.Write((byte)(stackPointer % BANK_SIZE), data);
+        SetPage(physicalStackPointer / BANK_SIZE);
+        bank.Write((byte)(physicalStackPointer % BANK_SIZE), data);
         bank.isDirty = true;
 
-        // Stack grows downward
-        stackPointer = (ushort)(stackPointer - 1);
+        virtualStackPointer = (ushort)(virtualStackPointer + 1);
     }
 
     public byte Pop()
     {
-        // Stack grows downward
-        stackPointer = (ushort)(stackPointer + 1);
+        virtualStackPointer = (ushort)(virtualStackPointer - 1);
 
-        SetPage(stackPointer / BANK_SIZE);
-        return bank.Read((byte)(stackPointer % BANK_SIZE));
+        SetPage(physicalStackPointer / BANK_SIZE);
+        return bank.Read((byte)(physicalStackPointer % BANK_SIZE));
+    }
+
+    public void SetStackPointer(byte data)
+    {
+        virtualStackPointer = (ushort)(MEMORY_SIZE - data);
     }
     
     
