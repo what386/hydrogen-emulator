@@ -1,23 +1,34 @@
 namespace Emulator.IO;
 
-public class Port
+public class Port(int address)
 {
+    private readonly int address = address;
     private byte input;
     private byte output;
     private IDevice? connectedDevice = null;
+    private int deviceOffset = 0; // This port's offset within the device's port range
     
     public event EventHandler<InterruptRequestedEventArgs>? InterruptRequested;
     
-    public void ConnectDevice(IDevice device)
+    public IDevice? ConnectedDevice => connectedDevice;
+    public bool IsConnected => connectedDevice != null;
+    
+    internal void ConnectDevice(IDevice device, int offset)
     {
+        if (connectedDevice != null)
+            throw new InvalidOperationException($"Port {address} already has a device connected");
+        
         connectedDevice = device;
+        deviceOffset = offset;
         
         device.RequestInterrupt += OnDeviceInterrupt;
         device.WriteToPort += OnDeviceWrite;
-        connectedDevice.OnPortWrite(output);
+        
+        // Notify device of initial output state
+        device.OnPortWrite(offset, output);
     }
     
-    public void DisconnectDevice()
+    internal void DisconnectDevice()
     {
         if (connectedDevice == null)
             return;
@@ -26,52 +37,36 @@ public class Port
         connectedDevice.WriteToPort -= OnDeviceWrite;
         
         connectedDevice = null;
-    }
-
-    public void StartDeviceAsync()
-    {
-        if (connectedDevice == null)
-            return;
-
-        connectedDevice.StartAsync();
-    }
-
-    public async Task StopDeviceAsync()
-    {
-        if (connectedDevice == null)
-            return;
-        
-        try
-        {
-            // Wait max 10 seconds for device to stop
-            await connectedDevice.StopAsync().WaitAsync(TimeSpan.FromSeconds(10));
-        }
-        catch (TimeoutException)
-        {
-            Console.WriteLine("Warning: Device did not stop within 10 seconds, continuing anyway");
-        }
+        deviceOffset = 0;
     }
     
-    // Forward the event unchanged
-    private void OnDeviceInterrupt(object sender, InterruptRequestedEventArgs e) 
+    private void OnDeviceInterrupt(object? sender, InterruptRequestedEventArgs e) 
         => InterruptRequested?.Invoke(sender, e);
     
-    private void OnDeviceWrite(object sender, DeviceWriteEventArgs e) 
-        => input = e.Data;
+    private void OnDeviceWrite(object? sender, DeviceWriteEventArgs e)
+    {
+        // Only respond to writes for this port's offset
+        if (e.Offset == deviceOffset)
+        {
+            input = e.Data;
+        }
+    }
     
     public byte Read()
     {
         if (connectedDevice != null)
-            input = connectedDevice.OnPortRead();
+        {
+            connectedDevice.OnPortRead(deviceOffset);
+        }
         return input;
     }
     
     public void Write(byte data)
     {
         output = data;
-        connectedDevice?.OnPortWrite(output);
+        connectedDevice?.OnPortWrite(deviceOffset, data);
     }
     
     public byte ReadDirect() => input;
-    public byte WriteDirect(byte data) => output = data;
+    public void WriteDirect(byte data) => output = data;
 }
