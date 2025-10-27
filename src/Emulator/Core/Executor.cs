@@ -257,12 +257,41 @@ public static class Executor
             }
             case Opcode.POP:
             {
-                state.Registers.Write(instruction.ValueX, state.RAM.Pop(instruction.ValueY));
+                switch (instruction.Type)
+                {
+                    case 0:
+                        state.Registers.Write(instruction.ValueX, state.RAM.Pop(instruction.ValueY));
+                        break;
+                    case 1:
+                        state.Registers.Write(instruction.ValueX, state.RAM.Peek(instruction.ValueY));
+                        break;
+                    case 2:
+                        state.StatusWord.Flags = state.RAM.Pop(instruction.ValueY);
+                        break;
+                    case 3:
+                        // discard
+                        _ = state.RAM.Pop(instruction.ValueY);
+                        break;
+                }
                 break;
             }
             case Opcode.PSH:
             {
-                state.RAM.Push(state.Registers.Read(instruction.ValueX), instruction.ValueY);
+                switch (instruction.Type)
+                {
+                    case 0:
+                        state.RAM.Push(state.Registers.Read(instruction.ValueX), instruction.ValueY);
+                        break;
+                    case 1:
+                        state.RAM.Poke(state.Registers.Read(instruction.ValueX), instruction.ValueY);
+                        break;
+                    case 2:
+                        state.RAM.Poke(state.StatusWord.Flags, instruction.ValueY);
+                        break;
+                    case 3:
+                        state.RAM.Push(0, instruction.ValueY);
+                        break;
+                }
                 break;
             }
 
@@ -285,7 +314,6 @@ public static class Executor
                 state.Registers.WriteDirect(instruction.ValueX, (byte)instruction.ValueY);
                 break;
             }
-
 
             case Opcode.MOV:
             {

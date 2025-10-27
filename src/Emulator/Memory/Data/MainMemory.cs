@@ -1,5 +1,7 @@
 namespace Emulator.Memory.Data;
 
+using Emulator.Registers;
+
 public class MainMemory
 {
     public const int MEMORY_SIZE = 65536; // 64 KiB
@@ -7,21 +9,23 @@ public class MainMemory
 
     private readonly MemoryPool pool;
     private readonly MemoryBank bank;
+    private StatusWord statusRegister;
 
     private int activePage = 0;
     public int AddressPointer = 0;
 
     // Stack grows downward
-    private ushort virtualStackPointer = 0;
-    private ushort physicalStackPointer => (ushort)(ushort.MaxValue - virtualStackPointer);
+    private int virtualStackPointer = 0;
+    private int physicalStackPointer => (ushort.MaxValue - virtualStackPointer);
     
     public int ActivePage => activePage;
     public int StackPointer => virtualStackPointer;
     
-    public MainMemory()
+    public MainMemory(StatusWord statusRegister)
     {
         pool = new MemoryPool(MEMORY_SIZE, BANK_SIZE);
         bank = new MemoryBank(BANK_SIZE);
+        this.statusRegister = statusRegister;
     }
     
     public byte Read(int address)
@@ -37,20 +41,57 @@ public class MainMemory
 
     public void Push(byte data, int offset)
     {
+        if (virtualStackPointer >= MEMORY_SIZE)
+        {
+            statusRegister.SetError(true);
+            return;
+        }
+        
         SetPage(physicalStackPointer / BANK_SIZE);
         bank.Write((physicalStackPointer % BANK_SIZE) - offset, data);
         bank.isDirty = true;
-
-        virtualStackPointer = (ushort)(virtualStackPointer + 1);
+        virtualStackPointer = virtualStackPointer + 1;
     }
-
+    
     public byte Pop(int offset)
     {
-        virtualStackPointer = (ushort)(virtualStackPointer - 1);
-
+        if (virtualStackPointer == 0)
+        {
+            statusRegister.SetError(true);
+            return 0;
+        }
+        
+        virtualStackPointer = virtualStackPointer - 1;
         SetPage(physicalStackPointer / BANK_SIZE);
         return bank.Read((physicalStackPointer % BANK_SIZE) - offset);
     }
+    
+    public void Poke(byte data, int offset)
+    {
+        if (virtualStackPointer == 0 || offset >= virtualStackPointer)
+        {
+            statusRegister.SetError(true);
+            return;
+        }
+        
+        int topElement = (physicalStackPointer + 1);
+        SetPage(topElement / BANK_SIZE);
+        bank.Write((topElement % BANK_SIZE) - offset, data);
+        bank.isDirty = true;
+    }
+    
+    public byte Peek(int offset)
+    {
+        if (virtualStackPointer == 0 || offset >= virtualStackPointer)
+        {
+            statusRegister.SetError(true);
+            return 0;
+        }
+        
+        int topElement = (physicalStackPointer + 1);
+        SetPage(topElement / BANK_SIZE);
+        return bank.Read((topElement % BANK_SIZE) - offset);
+    } 
 
     public void SetStackPointer(byte data)
     {
