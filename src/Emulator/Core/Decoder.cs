@@ -12,10 +12,9 @@ public static class Decoder
 
     public static Instruction Decode(ushort binary)
     {
-        Instruction instruction = new Instruction
-        {
-            RawInstruction = binary
-        };
+        Instruction instruction = new Instruction();
+
+        instruction.RawInstruction = binary;
         
         int opcode = Extract(binary, 11, 15);
         
@@ -51,7 +50,7 @@ public static class Decoder
             case 3:
                 instruction.ValueX = Extract(binary, 8, 10);
                 instruction.ValueY = Extract(binary, 5, 7);
-                instruction.ValueY = Extract(binary, 0, 4);
+                instruction.ValueZ = Extract(binary, 0, 4);
                 return instruction;
                 
             case 4:
