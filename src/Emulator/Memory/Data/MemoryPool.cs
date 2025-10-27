@@ -33,11 +33,11 @@ public class MemoryPool
         Array.Copy(data, 0, memory, startAddress, blockSize);
     }
     
-    public byte ReadDirect(ushort address) => memory[address];
+    public byte ReadDirect(int address) => memory[address];
     
-    public void WriteDirect(ushort address, byte value) => memory[address] = value;
+    public void WriteDirect(int address, byte value) => memory[address] = value;
     
-    public void LoadData(byte[] data, ushort startAddress = 0)
+    public void LoadData(byte[] data, int startAddress = 0)
     {
         int length = Math.Min(data.Length, poolSize - startAddress);
         Array.Copy(data, 0, memory, startAddress, length);

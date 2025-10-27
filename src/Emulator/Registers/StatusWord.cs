@@ -3,9 +3,8 @@ namespace Emulator.Registers;
 public class StatusWord
 {
     public const byte DEFAULTS = 0b00000000;
-    private byte flags;
-
-    public byte Flags => flags;
+    public byte Flags;
+    public bool AlternateConditions = false;
 
     // Bits 1 and 3 are reserved
     public const byte CARRY_FLAG = 0b00000001;
@@ -17,14 +16,14 @@ public class StatusWord
     public const byte ZERO_FLAG = 0b01000000;
     public const byte SIGN_FLAG = 0b10000000;
     
-    public void ClearFlags() => flags = DEFAULTS;
+    public void Clear() => Flags = DEFAULTS;
 
     private void SetFlag(byte flagMask, bool value)
     {
         if (value)
-            flags |= flagMask;
+            Flags |= flagMask;
         else
-            flags &= (byte)~flagMask;
+            Flags &= (byte)~flagMask;
     }
 
     public void SetError(bool value) => SetFlag(ERROR_FLAG, value);
@@ -52,6 +51,55 @@ public class StatusWord
 
     public bool GetFlag(byte flagMask)
     {
-        return (flags & flagMask) != 0;
+        return (Flags & flagMask) != 0;
+    }
+
+    public bool CheckCondition(int index, bool alt)
+    {
+        return alt ? CheckAltCondition(index) : CheckNormalCondition(index);
+    }
+
+    private bool CheckNormalCondition(int index)
+    {
+        bool Z = GetFlag(ZERO_FLAG);
+        bool C = GetFlag(CARRY_FLAG);
+        bool E = GetFlag(PARITY_FLAG);  // Even/Parity flag
+        bool V = GetFlag(OVERFLOW_FLAG);
+        bool N = GetFlag(SIGN_FLAG);    // Negative/Sign flag
+        
+        return index switch
+        {
+            0 => V,                    // 000: Overflow (V)
+            1 => !V,                   // 001: No Overflow (!V)
+            2 => N != V,               // 010: Less (N!=V)
+            3 => (N == V) && !Z,       // 011: Greater (N=V AND !Z)
+            4 => (N != V) || Z,        // 100: Less Equal (N!=V OR Z)
+            5 => N == V,               // 101: Greater Equal (N=V)
+            6 => !E,                   // 110: Odd (!E)
+            7 => true,                 // 111: Always
+            _ => throw new ArgumentOutOfRangeException(nameof(index), "Condition index must be 0-7")
+        };
+    }
+    
+    private bool CheckAltCondition(int index)
+    {
+        bool Z = GetFlag(ZERO_FLAG);
+        bool C = GetFlag(CARRY_FLAG);
+        bool E = GetFlag(PARITY_FLAG);  // Even/Parity flag
+        bool V = GetFlag(OVERFLOW_FLAG);
+        bool N = GetFlag(SIGN_FLAG);    // Negative/Sign flag
+
+        return index switch
+        {
+            0 => Z,                    // 000: Equal / Zero (Z)
+            1 => !Z,                   // 001: Not Equal / Not Zero (!Z)
+            2 => !C,                   // 010: Lower / No Carry (!C)
+            3 => C && !Z,              // 011: Higher (C AND !Z)
+            4 => !C || Z,              // 100: Lower Same (!C OR Z)
+            5 => C,                    // 101: Higher Same / Carry (C)
+            6 => E,                    // 110: Even (E)
+            7 => true,                 // 111: Always
+            _ => throw new ArgumentOutOfRangeException(nameof(index), "Condition index must be 0-7")
+        };
     }
 }

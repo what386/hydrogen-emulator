@@ -4,27 +4,43 @@ public class CallStack
 {
     const int STACK_SIZE = 64;
 
-    int stackPointer = 0;
+    public int StackPointer = 0;
 
-    ushort[] stack = new ushort[STACK_SIZE];
+    int[] stack = new int[STACK_SIZE];
 
-    public void Push(ushort data)
+    public void Push(int data)
     {
-        stack[stackPointer] = data;
+        stack[StackPointer] = data;
 
-        stackPointer++;
+        StackPointer++;
 
-        if (stackPointer is >= STACK_SIZE)
-            stackPointer = 0;
+        if (StackPointer is >= STACK_SIZE)
+            StackPointer = 0;
     }
 
-    public ushort Pop()
+    public int Pop()
     {
-        if (stackPointer is 0)
-            stackPointer = STACK_SIZE;
+        if (StackPointer is 0)
+            StackPointer = STACK_SIZE;
 
-        stackPointer--;
+        StackPointer--;
 
-        return stack[stackPointer];
+        return stack[StackPointer];
+    }
+
+    public void SetStackPointer(int address)
+    {
+        StackPointer = address;
+    }
+
+    public int GetOldest()
+    {
+        return stack[0];
+    }
+
+    public void Clear()
+    {
+        StackPointer = 0;
+        Array.Clear(stack, 0, STACK_SIZE);
     }
 }

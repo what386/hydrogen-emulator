@@ -1,11 +1,13 @@
 namespace Emulator.Registers;
 
+using Emulator.Memory.Instruction;
+
 public class ProgramCounter 
 {
-    private ushort programCounter = 0;
+    private int programCounter = 0;
 
-    private byte pcLow => (byte)programCounter;
-    private byte pcHigh => (byte)(programCounter >> 8);
+    public byte PCLow => (byte)programCounter;
+    public byte PCHigh => (byte)(programCounter >> 8);
 
     private int offset;
 
@@ -13,13 +15,41 @@ public class ProgramCounter
     {
     }
 
-    public ushort Get() => programCounter;
-    public byte Low() => pcLow;
-    public byte High() => pcHigh;
+    public int Get() => programCounter;
 
-    public void Jump(ushort value) => programCounter = value;
+    public int BranchOffset => programCounter % InstructionROM.CACHE_SIZE;
 
-    public void Add(short offset) => programCounter = (ushort)(programCounter + offset);
+    // Replace only the low byte
+    public void SetLow(byte value)
+    {
+        // Clear the low byte and insert the new value
+        programCounter = (programCounter & 0xFF00) | value;
+    }
+
+    // Replace only the high byte
+    public void SetHigh(byte value)
+    {
+        // Clear the high byte and insert the new value
+        programCounter = (programCounter & 0x00FF) | (value << 8);
+    }
+
+    public void SetBranchOffset(int offset)
+    {
+        if (offset < 0 || offset >= InstructionROM.CACHE_SIZE)
+            throw new ArgumentOutOfRangeException(nameof(offset));
+
+        programCounter = (programCounter - BranchOffset) + offset;
+    }
+
+    public void Jump(int value, bool pageMode = false)
+    {
+        if (pageMode)
+            programCounter = (int)(value * InstructionROM.CACHE_SIZE);
+        else
+            programCounter = value;
+    }
+
+    public void Add(int offset) => programCounter = programCounter + offset;
 
     public void Increment() => programCounter++;
     public void Decrement() => programCounter--;

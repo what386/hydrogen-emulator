@@ -1,0 +1,37 @@
+namespace Emulator.Models;
+
+public enum Opcode
+{
+    NOP,
+    HLT,
+    SYS,
+    CLI,
+    JMP,
+    BRA,
+    CAL,
+    RET,
+    INP,
+    OUT,
+    SLD,
+    SST,
+    POP,
+    PSH,
+    MLD,
+    MST,
+    LDI,
+    MOV,
+    ADI,
+    ANI,
+    ORI,
+    XRI,
+    CPI,
+    TSI,
+    ADD,
+    SUB,
+    BIT,
+    BNT,
+    BSH,
+    BSI,
+    MUL,
+    BTC
+}

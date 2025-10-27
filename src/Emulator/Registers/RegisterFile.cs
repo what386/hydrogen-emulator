@@ -14,6 +14,13 @@ public class RegisterFile
 
     public byte Read(int index)
     {
+        if (index == 0 && registers[0] != 0)
+        {
+            byte temp = registers[0];
+            registers[0] = 0;
+            return temp;
+        }
+        
         return registers[index];
     }
 
@@ -25,10 +32,7 @@ public class RegisterFile
         registers[index] = data;
     }
 
-    public void SetR0(byte value)
-    {
-        registers[0] = value;
-    }
+    public void WriteDirect(int index, byte value) => registers[index] = value;
 
     public void Clear() => Array.Clear(registers, 0, SIZE);
 }

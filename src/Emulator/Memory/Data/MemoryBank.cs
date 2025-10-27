@@ -29,11 +29,11 @@ public class MemoryBank
     
     public byte[] DumpBlock() => memory;
     
-    public byte Read(byte address) => memory[address];
+    public byte Read(int address) => memory[address];
     
-    public void Write(byte address, byte data) => memory[address] = data;
+    public void Write(int address, byte data) => memory[address] = data;
        
-    public void Fill(byte startAddress, int length, byte value)
+    public void Fill(int startAddress, int length, byte value)
     {
         int endAddress = Math.Min(startAddress + length, bankSize);
         Array.Fill(memory, value, startAddress, endAddress - startAddress);

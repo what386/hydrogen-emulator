@@ -9,6 +9,7 @@ public class MainMemory
     private readonly MemoryBank bank;
 
     private int activePage = 0;
+    public int AddressPointer = 0;
 
     // Stack grows downward
     private ushort virtualStackPointer = 0;
@@ -23,40 +24,39 @@ public class MainMemory
         bank = new MemoryBank(BANK_SIZE);
     }
     
-    public byte Read(byte address)
+    public byte Read(int address)
     {
-        return bank.Read(address);
+        return bank.Read(address + AddressPointer);
     }
     
-    public void Write(byte address, byte data)
+    public void Write(int address, byte data)
     {
-        bank.Write(address, data);
+        bank.Write(address + AddressPointer, data);
         bank.isDirty = true; // Mark bank as modified
     }
 
-    public void Push(byte data)
+    public void Push(byte data, int offset)
     {
         SetPage(physicalStackPointer / BANK_SIZE);
-        bank.Write((byte)(physicalStackPointer % BANK_SIZE), data);
+        bank.Write((physicalStackPointer % BANK_SIZE) - offset, data);
         bank.isDirty = true;
 
         virtualStackPointer = (ushort)(virtualStackPointer + 1);
     }
 
-    public byte Pop()
+    public byte Pop(int offset)
     {
         virtualStackPointer = (ushort)(virtualStackPointer - 1);
 
         SetPage(physicalStackPointer / BANK_SIZE);
-        return bank.Read((byte)(physicalStackPointer % BANK_SIZE));
+        return bank.Read((physicalStackPointer % BANK_SIZE) - offset);
     }
 
     public void SetStackPointer(byte data)
     {
-        virtualStackPointer = (ushort)(MEMORY_SIZE - data);
+        virtualStackPointer = data;
     }
-    
-    
+
     public void SetPage(int page)
     {
         if (page == activePage)
@@ -72,7 +72,7 @@ public class MainMemory
 
     private void WritebackCurrentBank()
     {
-        byte[] bankData = bank.DumpBlock();
+        byte [] bankData = bank.DumpBlock();
         pool.WriteBlock(activePage, bankData);
         bank.isDirty = false;
     }
@@ -101,7 +101,7 @@ public class MainMemory
         return pool.Dump();
     }
     
-    public void LoadData(byte[] data, byte startAddress = 0)
+    public void LoadData(byte[] data, int startAddress = 0)
     {
         pool.LoadData(data, startAddress);
         LoadPageIntoBank(0);

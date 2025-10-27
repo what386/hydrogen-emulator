@@ -38,9 +38,8 @@ public class PortController
         InterruptRequested?.Invoke(sender, new InterruptEventArgs(portAddress, e.Vector));
     }
     
-    public byte Read(byte address) => ports[address].Read();
-    public void Write(byte address, byte data) => ports[address].Write(data);
+    public byte Read(int address) => ports[address].Read();
+    public void Write(int address, byte data) => ports[address].Write(data);
 
     public byte ReadDirect(byte address) => ports[address].ReadDirect();
-    public byte WriteDirect(byte address) => ports[address].WriteDirect();
 }
