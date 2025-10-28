@@ -3,7 +3,8 @@ namespace Emulator.Registers;
 public class StatusWord
 {
     public const byte DEFAULTS = 0b00000000;
-    public byte Flags;
+    public byte Flags = DEFAULTS;
+
     public bool AlternateConditions = false;
 
     // Bits 1 and 3 are reserved

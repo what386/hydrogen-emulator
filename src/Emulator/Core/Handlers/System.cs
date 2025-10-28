@@ -66,7 +66,7 @@ public static class System
                     break;
                 }
                 int index = state.Registers.Read(0);
-                state.IntVector.SetAddress(index, (byte)instruction.ValueY);
+                state.IntVector.SetAddress(index, instruction.ValueY);
                 break;
             
             case 6:

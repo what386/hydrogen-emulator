@@ -1,29 +1,24 @@
 namespace Emulator.IO;
+using Emulator.Registers;
 
 public class PortController
 {
     public const int PORT_AMOUNT = 256; // Standard 8-bit I/O space
     private readonly Port[] ports;
     private readonly Dictionary<IDevice, int> deviceBasePorts; // Track device base addresses
+    private InterruptVector interruptVector;
     
-    public PortController()
+    public PortController(InterruptVector interruptVector)
     {
         ports = new Port[PORT_AMOUNT];
         deviceBasePorts = new Dictionary<IDevice, int>();
+        this.interruptVector = interruptVector;
         
         for (int i = 0; i < PORT_AMOUNT; i++)
         {
             ports[i] = new Port(i);
-            
-            // Subscribe to each port's interrupt and inject port address
-            byte portAddress = (byte)i;
-            ports[i].InterruptRequested += (sender, e) => 
-                OnPortInterrupt(sender, portAddress, e);
         }
     }
-    
-    // This event forwards to CPU with port address
-    public event EventHandler<InterruptEventArgs>? InterruptRequested;
     
     /// <summary>
     /// Connects a device to a contiguous block of ports starting at baseAddress.
@@ -53,6 +48,9 @@ public class PortController
             ports[baseAddress + i].ConnectDevice(device, i);
         }
         
+        // Subscribe to device interrupts at the controller level (only once per device)
+        device.RequestInterrupt += OnDeviceInterrupt;
+        
         deviceBasePorts[device] = baseAddress;
         return true;
     }
@@ -64,6 +62,9 @@ public class PortController
     {
         if (!deviceBasePorts.TryGetValue(device, out int baseAddress))
             return; // Device not connected
+        
+        // Unsubscribe from device interrupts
+        device.RequestInterrupt -= OnDeviceInterrupt;
         
         for (int i = 0; i < device.PortCount; i++)
         {
@@ -88,18 +89,12 @@ public class PortController
         }
     }
     
-    /// <summary>
-    /// Starts all connected devices.
-    /// </summary>
     public async Task StartAllDevicesAsync()
     {
         var tasks = deviceBasePorts.Keys.Select(d => d.StartAsync()).ToArray();
         await Task.WhenAll(tasks);
     }
     
-    /// <summary>
-    /// Stops all connected devices.
-    /// </summary>
     public async Task StopAllDevicesAsync()
     {
         var stopTasks = deviceBasePorts.Keys.Select(async device =>
@@ -120,14 +115,19 @@ public class PortController
     /// <summary>
     /// Gets the base port address of a connected device, or -1 if not connected.
     /// </summary>
-    public int GetDeviceBasePort(IDevice device)
-    {
-        return deviceBasePorts.TryGetValue(device, out int basePort) ? basePort : -1;
-    }
+    public int GetDeviceBasePort(IDevice device) =>
+        deviceBasePorts.TryGetValue(device, out int basePort) ? basePort : -1;
     
-    private void OnPortInterrupt(object? sender, byte portAddress, InterruptRequestedEventArgs e)
+    /// <summary>
+    /// Handles interrupt requests from devices.
+    /// Uses the device's base port address as the interrupt source.
+    /// </summary>
+    private void OnDeviceInterrupt(object? sender, InterruptRequestedEventArgs e)
     {
-        InterruptRequested?.Invoke(sender, new InterruptEventArgs(portAddress, e.Vector));
+        if (sender is IDevice device && deviceBasePorts.TryGetValue(device, out int basePort))
+        {
+            interruptVector.RequestInterrupt((byte)basePort, e.Vector);
+        }
     }
     
     public byte Read(int address) => ports[address].Read();

@@ -27,8 +27,11 @@ public static class Decoder
                 return instruction;
                 
             case 1:
+                instruction.Type = Extract(binary, 8, 8);
+                return instruction;
+
             case 7:
-                instruction.Type = Extract(binary, 2, 2);
+                instruction.Type = Extract(binary, 8, 9);
                 return instruction;
                 
             case 2:
@@ -77,6 +80,11 @@ public static class Decoder
                 return instruction;
                 
             case 17:
+                instruction.ValueX = Extract(binary, 8, 10);
+                instruction.ValueY = Extract(binary, 5, 7);
+                instruction.Type = Extract(binary, 3, 4);
+                return instruction;
+
             case 24:
             case 25:
             case 26:

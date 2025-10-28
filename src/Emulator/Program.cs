@@ -8,10 +8,10 @@ public class Program
     {
         Console.WriteLine("Hydrogen Emulator v1.0.0");
 
-        var cli = new EmulatorCLI();
+        var cli = new ConfigPrompt();
         var options = cli.PromptUserForConfig();
 
-        var emulator = new EmulatorApp(options);
+        var emulator = new EmulatorRuntime(options);
         emulator.Run();
 
         return 0;

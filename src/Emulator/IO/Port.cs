@@ -40,7 +40,7 @@ public class Port(int address)
         deviceOffset = 0;
     }
     
-    private void OnDeviceInterrupt(object? sender, InterruptRequestedEventArgs e) 
+    private void OnDeviceInterrupt(object? sender, InterruptRequestedEventArgs e)
         => InterruptRequested?.Invoke(sender, e);
     
     private void OnDeviceWrite(object? sender, DeviceWriteEventArgs e)

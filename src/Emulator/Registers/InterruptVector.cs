@@ -4,24 +4,26 @@ using System;
 
 public class InterruptVector 
 {
-    private const int SIZE = 32;
-    private byte[] interrupts = new byte[SIZE];
+    private const int SIZE = 16;
+    private int[] interrupts = new int[SIZE];
 
     public byte InterruptMask = 0b11111111;
+
+    public Stack<(byte priority, byte vector)> pendingInterrupts = new();
+    public Stack<(byte priority, byte vector)> activeInterrupts = new();
 
     public InterruptVector()
     {
         Array.Clear(interrupts, 0, SIZE);
     }
 
-    public byte GetAddress(int index)
-    {
-        return interrupts[index];
-    }
+    public int GetAddress(int index) => interrupts[index];
 
-    public void SetAddress(int index, byte data)
-    {
-        interrupts[index] = data;
+    public void SetAddress(int index, int address) => interrupts[index] = address;
+
+    public void RequestInterrupt(byte vector, byte priority){
+
+        pendingInterrupts.Push((vector, priority));
     }
 
     public void Clear() => Array.Clear(interrupts, 0, SIZE);
@@ -38,6 +40,22 @@ public class InterruptVector
             sb.Append($"{i:D2}-{i + 7:D2}: ");
             for (int j = 0; j < 8 && i + j < interrupts.Length; j++)
                 sb.Append($"{interrupts[i + j]:X2} ");
+            sb.AppendLine();
+        }
+
+        sb.AppendLine("Pending interrupts:");
+        for (int i = 0; i < pendingInterrupts.Count; i += 8)
+        {
+            var (vector, priority) = pendingInterrupts.ElementAt(i);
+            sb.Append($"Position {i}: vector: {vector}, priority {priority}");
+            sb.AppendLine();
+        }
+
+        sb.AppendLine("Active interrupts:");
+        for (int i = 0; i < activeInterrupts.Count; i += 8)
+        {
+            var (vector, priority) = activeInterrupts.ElementAt(i);
+            sb.Append($"Position {i}: vector: {vector}, priority {priority}");
             sb.AppendLine();
         }
 

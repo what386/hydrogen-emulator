@@ -11,13 +11,16 @@ public class MachineState
 {
     public Clock Clock { get; set; } = new();
     public ProgramCounter PC { get; set; } = new();
-    public PortController PortController { get; set; } = new();
     public StatusWord StatusWord { get; set; } = new();
     public ControlWord ControlWord { get; set; } = new();
     public InterruptVector IntVector { get; set; } = new();
     public RegisterFile Registers { get; set; } = new();
     public CallStack CallStack { get; set; } = new();
     public LoopRegister LoopRegister { get; set; } = new();
+
+
+    private PortController? _portController;
+    public PortController PortController => _portController ??= new(IntVector);
 
     private ArithmeticLogicUnit? _alu;
     public ArithmeticLogicUnit ALU => _alu ??= new(StatusWord);

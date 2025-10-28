@@ -41,7 +41,7 @@ public class ProgramCounter
         programCounter = (programCounter - BranchOffset) + offset;
     }
 
-    public void Jump(int value, bool pageMode = false)
+    public void Jump(int value, bool pageMode)
     {
         if (pageMode)
             programCounter = (int)(value * InstructionROM.CACHE_SIZE);

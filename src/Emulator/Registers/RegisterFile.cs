@@ -14,7 +14,7 @@ public class RegisterFile
 
     public byte Read(int index)
     {
-        if (index == 0 && registers[0] != 0)
+        if (registers[0] != 0)
         {
             byte temp = registers[0];
             registers[0] = 0;

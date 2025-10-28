@@ -1,6 +1,6 @@
 namespace Emulator.Application;
 
-public class EmulatorCLI
+public class ConfigPrompt
 {
     public EmulatorConfig PromptUserForConfig()
     {

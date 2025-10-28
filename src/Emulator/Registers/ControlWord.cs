@@ -3,8 +3,8 @@ namespace Emulator.Registers;
 public class ControlWord
 {
     // Flag register (8 bits)
-    public const byte DEFAULTS = 0b00010000;
-    public byte Flags;
+    public const byte DEFAULTS = 0b10010000;
+    public byte Flags = DEFAULTS;
 
     public const byte ALT_CONDITIONS = 0b00000001;
     public const byte PAGE_JUMP_MODE = 0b00000010;

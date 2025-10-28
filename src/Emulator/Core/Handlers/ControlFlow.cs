@@ -46,6 +46,24 @@ public static class ControlFlow
 
     public static void Ret(MachineState state, Instruction instruction)
     {
+        switch(instruction.Type)
+        {
+            case 0:
+                state.PC.Jump(state.CallStack.Pop(), 
+                state.ControlWord.GetFlag(ControlWord.PAGE_JUMP_MODE));
+                break;
+            case 1:
+                state.IntVector.activeInterrupts.Pop();
+                state.PC.Jump(state.CallStack.Pop(), false);
+                break;
+            case 2:
+                state.PC.Jump(state.CallStack.GetOldest(), state.ControlWord.GetFlag(ControlWord.PAGE_JUMP_MODE));
+                state.CallStack.Clear();
+                break;
+            case 3:
+                break;
+        }
+
         if (instruction.Type == 0)
         {
             state.PC.Jump(state.CallStack.Pop(), 

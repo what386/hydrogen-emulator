@@ -4,14 +4,14 @@ using Emulator.Core;
 using Emulator.IO.Devices;
 using Emulator.Models;
 
-public class EmulatorApp
+public class EmulatorRuntime
 {
     private readonly EmulatorConfig config;
     private readonly MachineState state = new();
     private bool isRunning = false;
     private bool inCommandMode = false;
 
-    public EmulatorApp(EmulatorConfig config)
+    public EmulatorRuntime(EmulatorConfig config)
     {
         this.config = config;
     }
@@ -19,9 +19,6 @@ public class EmulatorApp
     public void Run()
     {
         Setup();
-
-        Console.WriteLine($"Clock started at {state.Clock.ClockSpeedHz}Hz");
-        Console.WriteLine("Press Ctrl+C to enter command mode.\n");
 
         state.Clock.OnTick += OnClockTick;
 
@@ -32,6 +29,10 @@ public class EmulatorApp
         };
 
         state.Clock.Start();
+
+        Console.WriteLine($"Clock started at {state.Clock.ClockSpeedHz}Hz");
+        Console.WriteLine("Press Ctrl+C to enter command mode.\n");
+
         isRunning = true;
 
         while (isRunning)
@@ -42,6 +43,8 @@ public class EmulatorApp
 
     private void Setup()
     {
+        TerminalControl.DisableEcho();
+
         Console.WriteLine("Flashing ROM...");
         state.ROM.Flash(config.RomData);
         state.Clock.SetSpeed(config.ClockSpeedHz);
@@ -60,6 +63,7 @@ public class EmulatorApp
 
     private void OnClockTick()
     {
+        Interruptor.HandleInterrupts(state);
         var binary = state.ROM.Read((ushort)state.PC.Get());
         var instruction = Decoder.Decode(binary);
         Executor.Execute(state, instruction);
@@ -70,7 +74,10 @@ public class EmulatorApp
         if (inCommandMode)
             return;
 
+        TerminalControl.EnableEcho();
+
         Console.WriteLine("\n\n--- Command Mode ---");
+
         inCommandMode = true;
         state.Clock.Stop();
 
@@ -78,6 +85,9 @@ public class EmulatorApp
         cmdMode.Run();
 
         Console.WriteLine("--- Resuming Execution ---\n");
+
+        TerminalControl.DisableEcho();
+
         state.Clock.Start();
         inCommandMode = false;
     }

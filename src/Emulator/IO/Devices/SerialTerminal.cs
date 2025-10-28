@@ -86,7 +86,7 @@ public class SerialTerminal : IDevice
         
         // Calculate even parity for the 7 data bits
         bool calculatedParity = CalculateEvenParity(asciiChar);
-        
+    
         // Verify parity
         if (parityBit != calculatedParity)
         {
@@ -113,7 +113,7 @@ public class SerialTerminal : IDevice
                 Console.Write((char)asciiChar);
                 break;
             default: // Non-printable character
-                Console.Write($"[0x{asciiChar:X2}]");
+                Console.Write((char)asciiChar);
                 break;
         }
     }
