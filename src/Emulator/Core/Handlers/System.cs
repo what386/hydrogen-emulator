@@ -8,6 +8,7 @@ public static class System
     public static void Nop(MachineState state, Instruction instruction)
     {
         // Do nothing
+        state.PC.Increment();
     }
 
     public static void Hlt(MachineState state, Instruction instruction)
@@ -16,6 +17,8 @@ public static class System
             state.Clock.Stop();
         else
             state.Clock.Pause();
+
+        state.PC.Increment();
     }
 
     public static void Sys(MachineState state, Instruction instruction)
@@ -78,5 +81,6 @@ public static class System
             case 7:
                 break;
         }
+        state.PC.Increment();
     }
 }

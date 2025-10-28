@@ -41,6 +41,7 @@ public static class Memory
                 state.Registers.Write(instruction.ValueX, state.PC.PCHigh);
                 break;
         }
+        state.PC.Increment();
     }
 
     public static void Sst(MachineState state, Instruction instruction)
@@ -104,6 +105,7 @@ public static class Memory
                 state.PC.SetHigh(state.Registers.Read(instruction.ValueY));
                 break;
         }
+        state.PC.Increment();
     }
 
     public static void Pop(MachineState state, Instruction instruction)
@@ -124,6 +126,7 @@ public static class Memory
                 _ = state.RAM.Pop(instruction.ValueY);
                 break;
         }
+        state.PC.Increment();
     }
 
     public static void Psh(MachineState state, Instruction instruction)
@@ -143,15 +146,18 @@ public static class Memory
                 state.RAM.Push(0, instruction.ValueY);
                 break;
         }
+        state.PC.Increment();
     }
 
     public static void Mld(MachineState state, Instruction instruction)
     {
         state.Registers.Write(instruction.ValueX, state.RAM.Read(instruction.ValueY));
+        state.PC.Increment();
     }
 
     public static void Mst(MachineState state, Instruction instruction)
     {
         state.RAM.Write(instruction.ValueY, state.Registers.Read(instruction.ValueX));
+        state.PC.Increment();
     }
 }

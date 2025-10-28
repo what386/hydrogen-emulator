@@ -8,6 +8,7 @@ public static class Arithmetic
     public static void Ldi(MachineState state, Instruction instruction)
     {
         state.Registers.WriteDirect(instruction.ValueX, (byte)instruction.ValueY);
+        state.PC.Increment();
     }
 
     public static void Mov(MachineState state, Instruction instruction)
@@ -26,40 +27,47 @@ public static class Arithmetic
             case 3:
                 break;
         }
+        state.PC.Increment();
     }
 
     public static void Adi(MachineState state, Instruction instruction)
     {
         state.Registers.Write(instruction.ValueX, 
             state.ALU.Add(state.Registers.Read(instruction.ValueX), (byte)instruction.ValueY));
+        state.PC.Increment();
     }
 
     public static void Ani(MachineState state, Instruction instruction)
     {
         state.Registers.Write(instruction.ValueX, 
             state.ALU.And(state.Registers.Read(instruction.ValueX), (byte)instruction.ValueY));
+        state.PC.Increment();
     }
 
     public static void Ori(MachineState state, Instruction instruction)
     {
         state.Registers.Write(instruction.ValueX, 
             state.ALU.Or(state.Registers.Read(instruction.ValueX), (byte)instruction.ValueY));
+        state.PC.Increment();
     }
 
     public static void Xri(MachineState state, Instruction instruction)
     {
         state.Registers.Write(instruction.ValueX, 
             state.ALU.Xor(state.Registers.Read(instruction.ValueX), (byte)instruction.ValueY));
+        state.PC.Increment();
     }
 
     public static void Cpi(MachineState state, Instruction instruction)
     {
         state.ALU.Sub(state.Registers.Read(instruction.ValueX), (byte)instruction.ValueY);
+        state.PC.Increment();
     }
 
     public static void Tsi(MachineState state, Instruction instruction)
     {
         state.ALU.And(state.Registers.Read(instruction.ValueX), (byte)instruction.ValueY);
+        state.PC.Increment();
     }
 
     public static void Add(MachineState state, Instruction instruction)
@@ -91,6 +99,7 @@ public static class Arithmetic
                         state.Registers.Read(instruction.ValueZ)));
                 break;
         }
+        state.PC.Increment();
     }
 
     public static void Sub(MachineState state, Instruction instruction)
@@ -122,6 +131,7 @@ public static class Arithmetic
                         state.Registers.Read(instruction.ValueZ)));
                 break;
         }
+        state.PC.Increment();
     }
 
     public static void Bit(MachineState state, Instruction instruction)
@@ -153,6 +163,7 @@ public static class Arithmetic
                         state.Registers.Read(instruction.ValueZ)));
                 break;
         }
+        state.PC.Increment();
     }
 
     public static void Bnt(MachineState state, Instruction instruction)
@@ -184,5 +195,6 @@ public static class Arithmetic
                         state.Registers.Read(instruction.ValueZ)));
                 break;
         }
+        state.PC.Increment();
     }
 }

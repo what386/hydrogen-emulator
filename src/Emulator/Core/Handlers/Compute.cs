@@ -34,6 +34,7 @@ public static class Compute
                         state.Registers.Read(instruction.ValueZ)));
                 break;
         }
+        state.PC.Increment();
     }
 
     public static void Bsi(MachineState state, Instruction instruction)
@@ -65,6 +66,7 @@ public static class Compute
                         (byte)instruction.ValueZ));
                 break;
         }
+        state.PC.Increment();
     }
 
     public static void Mul(MachineState state, Instruction instruction)
@@ -96,6 +98,7 @@ public static class Compute
                         (byte)instruction.ValueZ));
                 break;
         }
+        state.PC.Increment();
     }
 
     public static void Btc(MachineState state, Instruction instruction)
@@ -119,5 +122,6 @@ public static class Compute
                     state.CMU.CountOnes(state.Registers.Read(instruction.ValueY)));
                 break;
         }
+        state.PC.Increment();
     }
 }

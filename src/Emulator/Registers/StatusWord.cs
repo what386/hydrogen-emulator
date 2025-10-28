@@ -102,4 +102,26 @@ public class StatusWord
             _ => throw new ArgumentOutOfRangeException(nameof(index), "Condition index must be 0-7")
         };
     }
+
+    public override string ToString()
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("Status Word:");
+        sb.AppendLine($"Flags (bin): 0b{Convert.ToString(Flags, 2).PadLeft(8, '0')}");
+        sb.AppendLine($"Alternate Conditions: {AlternateConditions}");
+        sb.AppendLine("Set Flags:");
+
+        if (GetFlag(CARRY_FLAG)) sb.AppendLine(" - CARRY");
+        if (GetFlag(ERROR_FLAG)) sb.AppendLine(" - ERROR");
+        if (GetFlag(PARITY_FLAG)) sb.AppendLine(" - PARITY");
+        if (GetFlag(AUX_CARRY_FLAG)) sb.AppendLine(" - AUX_CARRY");
+        if (GetFlag(OVERFLOW_FLAG)) sb.AppendLine(" - OVERFLOW");
+        if (GetFlag(ZERO_FLAG)) sb.AppendLine(" - ZERO");
+        if (GetFlag(SIGN_FLAG)) sb.AppendLine(" - SIGN");
+
+        if (sb.ToString().EndsWith("Set Flags:\n"))
+            sb.AppendLine(" (none)");
+
+        return sb.ToString();
+    }
 }

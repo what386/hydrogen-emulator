@@ -4,7 +4,9 @@ using System.Diagnostics;
 
 public class Clock
 {
-    private const int CLOCK_SPEED = 500000; // 500 KHz
+    private int clockSpeedHz = 10;
+    public int ClockSpeedHz => clockSpeedHz;
+    //private const int clockSpeedHz = 10000; // 10 KHz
     
     private Thread? clockThread;
     private CancellationTokenSource? cancellationTokenSource;
@@ -12,6 +14,24 @@ public class Clock
     private readonly object lockObject = new object();
     
     public event Action? OnTick;
+
+    public void SetSpeed(int newSpeedHz)
+    {
+        if (newSpeedHz <= 0)
+        {
+            throw new ArgumentException("Clock speed must be positive", nameof(newSpeedHz));
+        }
+        
+        lock (lockObject)
+        {
+            if (isRunning)
+            {
+                throw new ArgumentException("Clock speed cannot be set while clock is running");
+            }
+            
+            clockSpeedHz = newSpeedHz;
+        }
+    }
 
     public void Start()
     {
@@ -80,7 +100,8 @@ public class Clock
         var stopwatch = Stopwatch.StartNew();
         long tickCount = 0;
         
-        const int batchSize = 1000; // Check timing every 1000 ticks (every 2ms at 500 KHz)
+        // Adaptive batch size: check timing frequently at low speeds, batch at high speeds
+        int batchSize = Math.Max(1, clockSpeedHz / 100); // Check every 10ms worth of ticks
         int ticksUntilCheck = batchSize;
         
         while (!token.IsCancellationRequested)
@@ -94,7 +115,7 @@ public class Clock
             if (ticksUntilCheck <= 0)
             {
                 ticksUntilCheck = batchSize;
-                double targetTimeMs = (tickCount * 1000.0) / CLOCK_SPEED;
+                double targetTimeMs = (tickCount * 1000.0) / clockSpeedHz;
                 double currentTimeMs = stopwatch.Elapsed.TotalMilliseconds;
                 double deltaMs = targetTimeMs - currentTimeMs;
                 
@@ -115,5 +136,5 @@ public class Clock
                 }
             }
         }
-    }
+    }    
 }

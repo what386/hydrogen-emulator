@@ -55,5 +55,15 @@ public class ProgramCounter
     public void Decrement() => programCounter--;
 
     public void Reset() => programCounter = 0;
+
+
+    public override string ToString()
+    {
+        return $"Program Counter:\n" +
+               $"PC: {programCounter} (0x{programCounter:X4})\n" +
+               $"PCH: {PCHigh:X2}\n" +
+               $"PCL: {PCLow:X2}\n" +
+               $"Branch Offset: {BranchOffset}\n";
+    }
 }
 

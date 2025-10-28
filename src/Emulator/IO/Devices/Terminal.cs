@@ -1,9 +1,7 @@
 namespace Emulator.IO.Devices;
-
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-
 /// <summary>
 /// Serial Terminal device with 7-bit ASCII and even parity.
 /// Emulates a UART-style serial interface similar to 8250/16550.
@@ -69,37 +67,13 @@ public class SerialTerminal : IDevice
     
     public void OnPortRead(int offset)
     {
-        byte value = 0x00;
-        
-        switch (offset)
+        if (offset == PORT_DATA)
         {
-            case PORT_DATA:
-                // Read received character
-                lock (_lock)
-                {
-                    value = _inputBuffer;
-                    _inputReady = false;  // Clear RX_READY flag
-                    _inputBuffer = 0;
-                }
-                break;
-                
-            case PORT_STATUS:
-                // Read status flags
-                lock (_lock)
-                {
-                    if (_inputReady)
-                        value |= STATUS_RX_READY;
-                    
-                    // TX always ready (no buffering)
-                    value |= STATUS_TX_READY;
-                    
-                    if (_parityError)
-                        value |= STATUS_PARITY_ERROR;
-                }
-                break;
-        }
-        
-        WriteToPort?.Invoke(this, new DeviceWriteEventArgs(offset, value));
+            lock (_lock)
+            {
+                _inputReady = false;
+            }
+        } 
     }
     
     private void TransmitCharacter(byte data)
@@ -210,6 +184,13 @@ public class SerialTerminal : IDevice
                                 _inputReady = true;
                                 _parityError = false;
                                 
+                                // Immediately write to port
+                                WriteToPort?.Invoke(this, new DeviceWriteEventArgs(PORT_DATA, _inputBuffer));
+                                
+                                // Also write updated status
+                                byte status = STATUS_TX_READY | STATUS_RX_READY;
+                                WriteToPort?.Invoke(this, new DeviceWriteEventArgs(PORT_STATUS, status));
+                                
                                 // Request interrupt to notify processor of new data
                                 RequestInterrupt?.Invoke(this, new InterruptRequestedEventArgs(_interruptVector));
                             }
@@ -238,7 +219,7 @@ public class SerialTerminal : IDevice
             count += temp & 1;
             temp >>= 1;
         }
-        
+
         // Even parity: return true if odd number of bits (to make total even)
         return (count & 1) == 1;
     }

@@ -28,11 +28,18 @@ public class InstructionPool
     
     public void Flash(ushort[] data)
     {
-        if (data.Length != instructions.Length)
-            throw new ArgumentException();
-
-        Array.Copy(data, 0, instructions, 0, poolSize);
-    }
+        if (data.Length > instructions.Length)
+            throw new ArgumentException($"Data too large: {data.Length} > {instructions.Length}");
+        
+        // Copy the data
+        Array.Copy(data, 0, instructions, 0, data.Length);
+        
+        // Fill the rest with zeros
+        if (data.Length < instructions.Length)
+        {
+            Array.Clear(instructions, data.Length, instructions.Length - data.Length);
+        }
+    } 
     
     public void Clear() => Array.Clear(instructions, 0, poolSize);
     

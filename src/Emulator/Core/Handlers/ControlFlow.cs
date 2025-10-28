@@ -15,6 +15,7 @@ public static class ControlFlow
             return;
         
         state.Registers.WriteDirect(instruction.ValueX, (byte)instruction.ValueZ);
+        state.PC.Increment();
     }
 
     public static void Jmp(MachineState state, Instruction instruction)
@@ -29,7 +30,10 @@ public static class ControlFlow
             state.ControlWord.GetFlag(ControlWord.ALT_CONDITIONS));
         
         if (!condition)
+        {
+            state.PC.Increment();
             return;
+        }
         
         state.PC.Jump(instruction.ValueY, state.ControlWord.GetFlag(ControlWord.PAGE_JUMP_MODE));
     }

@@ -40,7 +40,30 @@ public class MemoryBank
     }
     
     public void Clear() => Array.Clear(memory, 0, bankSize);
+
+    public override string ToString()
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine($"Memory Bank:");
+        sb.AppendLine($"Size: {bankSize} bytes");
+        sb.AppendLine($"Dirty: {isDirty}, Invalid: {isInvalid}");
+        sb.AppendLine();
+
+        // Show the first 64 bytes as a preview
+        int previewLength = Math.Min(64, bankSize);
+        for (int i = 0; i < previewLength; i += 16)
+        {
+            sb.Append($"{i:X4}: ");
+            for (int j = 0; j < 16 && i + j < previewLength; j++)
+            {
+                sb.Append($"{memory[i + j]:X2} ");
+            }
+            sb.AppendLine();
+        }
+
+        if (bankSize > previewLength)
+            sb.AppendLine($"... ({bankSize - previewLength} bytes hidden)");
+
+        return sb.ToString();
+    }
 }
-
-
-

@@ -141,7 +141,17 @@ public class MainMemory
         
         return pool.Dump();
     }
-    
+
+    public string GetBankString()
+    {
+        return bank.ToString();
+    }
+
+    public string GetPoolString()
+    {
+        return pool.ToString();
+    }
+
     public void LoadData(byte[] data, int startAddress = 0)
     {
         pool.LoadData(data, startAddress);
