@@ -8,8 +8,6 @@ public class Port(int address)
     private IDevice? connectedDevice = null;
     private int deviceOffset = 0; // This port's offset within the device's port range
     
-    public event EventHandler<InterruptRequestedEventArgs>? InterruptRequested;
-    
     public IDevice? ConnectedDevice => connectedDevice;
     public bool IsConnected => connectedDevice != null;
     
@@ -21,7 +19,6 @@ public class Port(int address)
         connectedDevice = device;
         deviceOffset = offset;
         
-        device.RequestInterrupt += OnDeviceInterrupt;
         device.WriteToPort += OnDeviceWrite;
         
         // Notify device of initial output state
@@ -33,15 +30,11 @@ public class Port(int address)
         if (connectedDevice == null)
             return;
         
-        connectedDevice.RequestInterrupt -= OnDeviceInterrupt;
         connectedDevice.WriteToPort -= OnDeviceWrite;
         
         connectedDevice = null;
         deviceOffset = 0;
     }
-    
-    private void OnDeviceInterrupt(object? sender, InterruptRequestedEventArgs e)
-        => InterruptRequested?.Invoke(sender, e);
     
     private void OnDeviceWrite(object? sender, DeviceWriteEventArgs e)
     {
