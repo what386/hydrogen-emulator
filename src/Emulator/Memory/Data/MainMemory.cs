@@ -27,6 +27,16 @@ public class MainMemory
         bank = new MemoryBank(BANK_SIZE);
         this.statusRegister = statusRegister;
     }
+
+    public byte ReadPool(int address)
+    {
+        return pool.ReadDirect(address);
+    }
+
+    public byte ReadBank(int address)
+    {
+        return pool.ReadDirect(address);
+    }
     
     public byte Read(int address)
     {
@@ -140,16 +150,6 @@ public class MainMemory
             WritebackCurrentBank();
         
         return pool.Dump();
-    }
-
-    public string GetBankString()
-    {
-        return bank.ToString();
-    }
-
-    public string GetPoolString()
-    {
-        return pool.ToString();
     }
 
     public void LoadData(byte[] data, int startAddress = 0)

@@ -4,21 +4,47 @@ public class ConfigPrompt
 {
     public EmulatorConfig PromptUserForConfig()
     {
-        Console.Write("Enter ROM file path: ");
-        string? filePath = Console.ReadLine();
+        Console.WriteLine("Configuration Setup");
+        Console.WriteLine("═══════════════════\n");
+        
+        string? filePath;
 
-        if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
-            throw new FileNotFoundException("ROM file not found.", filePath);
-
-        Console.Write("Set clock speed (Hz): ");
-        if (!int.TryParse(Console.ReadLine(), out int speed))
-            speed = 1000; // default
-
+retryFile:
+        Console.Write("ROM file path: ");
+        filePath = Console.ReadLine();
+        
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            Console.WriteLine("  ⚠ Path cannot be empty");
+            goto retryFile;
+        }
+        
+        if (!File.Exists(filePath))
+        {
+            Console.WriteLine($"  ⚠ File not found: {filePath}");
+            goto retryFile;
+        }
+            
+        
+        // Clock speed with default
+        Console.Write("Clock speed (Hz) [default: 1000]: ");
+        string? speedInput = Console.ReadLine();
+        int speed = 1000;
+        
+        if (!string.IsNullOrWhiteSpace(speedInput) && int.TryParse(speedInput, out int parsedSpeed))
+        {
+            speed = parsedSpeed;
+        }
+        
+        Console.WriteLine($"✓ Clock speed: {speed}Hz\n");
+        
         var fileBytes = File.ReadAllBytes(filePath);
         ushort[] romData = ConvertToUShorts(fileBytes);
-
+        
+        Console.WriteLine($"\n✓ Loaded {fileBytes.Length} bytes from ROM");
+        
         return new EmulatorConfig(romData, speed);
-    }
+    } 
 
     private static ushort[] ConvertToUShorts(byte[] bytes)
     {

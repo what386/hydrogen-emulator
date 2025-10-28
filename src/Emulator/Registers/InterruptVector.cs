@@ -27,38 +27,4 @@ public class InterruptVector
     }
 
     public void Clear() => Array.Clear(interrupts, 0, SIZE);
-
-    public override string ToString()
-    {
-        var sb = new System.Text.StringBuilder();
-        sb.AppendLine("Interrupt Vector:");
-        sb.AppendLine($"Interrupt Mask: 0b{Convert.ToString(InterruptMask, 2).PadLeft(8, '0')}");
-        sb.AppendLine("Entries:");
-        
-        for (int i = 0; i < interrupts.Length; i += 8)
-        {
-            sb.Append($"{i:D2}-{i + 7:D2}: ");
-            for (int j = 0; j < 8 && i + j < interrupts.Length; j++)
-                sb.Append($"{interrupts[i + j]:X2} ");
-            sb.AppendLine();
-        }
-
-        sb.AppendLine("Pending interrupts:");
-        for (int i = 0; i < pendingInterrupts.Count; i += 8)
-        {
-            var (vector, priority) = pendingInterrupts.ElementAt(i);
-            sb.Append($"Position {i}: vector: {vector}, priority {priority}");
-            sb.AppendLine();
-        }
-
-        sb.AppendLine("Active interrupts:");
-        for (int i = 0; i < activeInterrupts.Count; i += 8)
-        {
-            var (vector, priority) = activeInterrupts.ElementAt(i);
-            sb.Append($"Position {i}: vector: {vector}, priority {priority}");
-            sb.AppendLine();
-        }
-
-        return sb.ToString();
-    }
 }

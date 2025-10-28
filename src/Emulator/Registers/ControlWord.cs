@@ -29,26 +29,4 @@ public class ControlWord
     {
         return (Flags & flagMask) != 0;
     }
-
-    public override string ToString()
-    {
-        var sb = new System.Text.StringBuilder();
-        sb.AppendLine("Control Word:");
-        sb.AppendLine($"Flags (bin): 0b{Convert.ToString(Flags, 2).PadLeft(8, '0')}");
-        sb.AppendLine("Set Flags:");
-
-        if (GetFlag(ALT_CONDITIONS)) sb.AppendLine(" - ALT_CONDITIONS");
-        if (GetFlag(PAGE_JUMP_MODE)) sb.AppendLine(" - PAGE_JUMP_MODE");
-        if (GetFlag(AUTO_INCREMENT)) sb.AppendLine(" - AUTO_INCREMENT");
-        if (GetFlag(DIRECTION_FLAG)) sb.AppendLine(" - DIRECTION_FLAG");
-        if (GetFlag(INTERRUPT_ENABLE)) sb.AppendLine(" - INTERRUPT_ENABLE");
-        if (GetFlag(HALT_FLAG)) sb.AppendLine(" - HALT_FLAG");
-        if (GetFlag(DEBUG_MODE)) sb.AppendLine(" - DEBUG_MODE");
-        if (GetFlag(KERNEL_MODE)) sb.AppendLine(" - KERNEL_MODE");
-
-        if (sb.ToString().EndsWith("Set Flags:\n"))
-            sb.AppendLine(" (none)");
-
-        return sb.ToString();
-    }
 }

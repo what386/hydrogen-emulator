@@ -46,29 +46,4 @@ public class MemoryPool
     public void Clear() => Array.Clear(memory, 0, poolSize);
     
     public byte[] Dump() => memory;
-
-    public override string ToString()
-    {
-        var sb = new System.Text.StringBuilder();
-        sb.AppendLine("=== Memory Pool ===");
-        sb.AppendLine($"Pool Size: {poolSize} bytes");
-        sb.AppendLine($"Block Size: {blockSize} bytes");
-        sb.AppendLine($"Blocks: {poolSize / blockSize}");
-        sb.AppendLine();
-
-        int displayLength = Math.Clamp(128, 0, poolSize);
-
-        for (int i = 0; i < displayLength; i += 16)
-        {
-            sb.Append($"{i:X4}: ");
-            for (int j = 0; j < 16 && i + j < displayLength; j++)
-                sb.Append($"{memory[i + j]:X2} ");
-            sb.AppendLine();
-        }
-
-        if (displayLength < poolSize)
-            sb.AppendLine($"... ({poolSize - displayLength} bytes hidden)");
-
-        return sb.ToString();
-    }
 }
