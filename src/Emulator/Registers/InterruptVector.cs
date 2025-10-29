@@ -4,7 +4,8 @@ using System;
 
 public class InterruptVector 
 {
-    private const int SIZE = 16;
+    public const int SIZE = 16;
+    
     private int[] interrupts = new int[SIZE];
 
     public byte InterruptMask = 0b11111111;

@@ -47,7 +47,7 @@ public static class SystemCommands
         Console.WriteLine("  ✓ Emulator reset complete");
         Console.ResetColor();
     }
-    
+   
     public static void ShowHelp()
     {
         PrintHelpSection("State Inspection:");
@@ -87,8 +87,8 @@ public static class SystemCommands
         PrintHelpCommand("devices", "List all connected devices");
         PrintHelpCommand("ports", "Show port map");
         PrintHelpCommand("device <port>", "Show device information");
-        PrintHelpCommand("inport <port>", "Read from I/O port");
-        PrintHelpCommand("outport <port> <val>", "Write to I/O port");
+        PrintHelpCommand("in <port>", "Read from I/O port");
+        PrintHelpCommand("out <port> <val>", "Write to I/O port");
         Console.WriteLine();
         
         PrintHelpSection("Other:");
@@ -113,4 +113,5 @@ public static class SystemCommands
         Console.ForegroundColor = ConsoleColor.DarkGray;
         Console.WriteLine($"  {description}");
         Console.ResetColor();
-    }}
+    }
+}

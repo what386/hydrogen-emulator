@@ -1,11 +1,19 @@
 namespace Emulator.IO;
+
+using System.Text.Json.Serialization;
 using Emulator.Registers;
 
 public class PortController
 {
-    public const int PORT_AMOUNT = 256; // Standard 8-bit I/O space
+    public const int PORT_AMOUNT = 256;
+
+    [JsonInclude]
     private readonly Port[] ports;
+
+    [JsonInclude]
     private readonly Dictionary<IDevice, int> deviceBasePorts; // Track device base addresses
+
+    [JsonInclude]
     private InterruptVector interruptVector;
     
     public PortController(InterruptVector interruptVector)

@@ -36,7 +36,7 @@ public interface IDevice
     void OnPortWrite(int offset, byte data);
     
     /// <summary>
-    /// Called by the processor when it reads data from one of the device's I/O ports.
+    /// Called by the processor after it reads data from one of the device's I/O ports.
     /// </summary>
     /// <param name="offset">Port offset from device base (0 to PortCount-1)</param>
     void OnPortRead(int offset);

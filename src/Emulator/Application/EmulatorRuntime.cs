@@ -62,8 +62,6 @@ public class EmulatorRuntime
     
     private void Setup()
     {
-        TerminalControl.DisableEcho();
-        
         Console.ForegroundColor = ConsoleColor.Cyan;
         Console.Write("Flashing ROM... ");
         Console.ResetColor();
@@ -97,7 +95,6 @@ public class EmulatorRuntime
         Console.ResetColor();
         state.Clock.Stop();
         _ = state.PortController.StopAllDevicesAsync();
-        TerminalControl.EnableEcho();
     }
     
     private void OnClockTick()
@@ -187,8 +184,6 @@ public class EmulatorRuntime
 
         Console.Clear();
             
-        TerminalControl.EnableEcho();
-        
         Console.ForegroundColor = ConsoleColor.Yellow;
         Console.WriteLine("╔════════════════════════════════════╗");
         Console.WriteLine("║        COMMAND MODE ACTIVE         ║");
@@ -204,7 +199,6 @@ public class EmulatorRuntime
         
         Console.Clear();
 
-        TerminalControl.DisableEcho();
         state.Clock.Start();
         inCommandMode = false;
     }

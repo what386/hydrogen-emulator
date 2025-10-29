@@ -139,10 +139,12 @@ public class CommandMode
                 case "device":
                     DeviceCommands.DeviceInfo(state, arg);
                     break;
-                case "inport":
+
+                case "in":
                     DeviceCommands.ReadPort(state, arg);
                     break;
-                case "outport":
+
+                case "out":
                     DeviceCommands.WritePort(state, arg);
                     break;
 
@@ -150,7 +152,7 @@ public class CommandMode
                 case "reset":
                     SystemCommands.Reset(state);
                     break;
-                    
+
                 case "resume":
                 case "continue":
                 case "c":

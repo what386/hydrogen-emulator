@@ -4,7 +4,8 @@ using System;
 
 public class RegisterFile 
 {
-    private const int SIZE = 8;
+    public const int SIZE = 8;
+
     private byte[] registers = new byte[SIZE];
 
     public RegisterFile()
