@@ -37,6 +37,17 @@ public class MainMemory
     {
         return pool.ReadDirect(address);
     }
+
+    public void WritePool(int address, byte data)
+    {
+        pool.WriteDirect(address, data);
+    }
+
+    public void WriteBank(int address, byte data)
+    {
+        pool.WriteDirect(address, data);
+    }
+
     
     public byte Read(int address)
     {

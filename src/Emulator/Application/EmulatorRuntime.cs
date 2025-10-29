@@ -1,4 +1,6 @@
 namespace Emulator.Application;
+
+using Emulator.Application.Commands;
 using Emulator.Core;
 using Emulator.IO.Devices;
 using Emulator.Models;
@@ -31,9 +33,7 @@ public class EmulatorRuntime
         };
         
         // Reserve space for status bar at bottom
-        Console.WriteLine(); // Reserve one line for status bar
         statusBarRow = Console.CursorTop;
-        Console.WriteLine(); // Push content up by one line
         
         state.Clock.Start();
         
@@ -88,8 +88,6 @@ public class EmulatorRuntime
         Console.ForegroundColor = ConsoleColor.Green;
         Console.WriteLine("✓");
         Console.ResetColor();
-        
-        Console.WriteLine();
     }
     
     private void Shutdown()
@@ -104,6 +102,17 @@ public class EmulatorRuntime
     
     private void OnClockTick()
     {
+        if (BreakpointCommands.IsBreakpoint(state.PC.Get()))
+        {
+            Console.WriteLine($"\n⚠ Breakpoint hit at 0x{state.PC.Get():X4}");
+            state.Clock.Stop();
+        }
+
+        if (WatchpointCommands.CheckWatches(state))
+        {
+            state.Clock.Stop();
+        }
+
         Interruptor.HandleInterrupts(state);
         var binary = state.ROM.Read((ushort)state.PC.Get());
         var instruction = Decoder.Decode(binary);
@@ -175,10 +184,11 @@ public class EmulatorRuntime
     {
         if (inCommandMode)
             return;
+
+        Console.Clear();
             
         TerminalControl.EnableEcho();
         
-        Console.WriteLine("\n");
         Console.ForegroundColor = ConsoleColor.Yellow;
         Console.WriteLine("╔════════════════════════════════════╗");
         Console.WriteLine("║        COMMAND MODE ACTIVE         ║");
@@ -192,12 +202,8 @@ public class EmulatorRuntime
         var cmdMode = new CommandMode(state);
         cmdMode.Run();
         
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine("\n╔════════════════════════════════════╗");
-        Console.WriteLine("║       RESUMING EXECUTION...        ║");
-        Console.WriteLine("╚════════════════════════════════════╝\n");
-        Console.ResetColor();
-        
+        Console.Clear();
+
         TerminalControl.DisableEcho();
         state.Clock.Start();
         inCommandMode = false;

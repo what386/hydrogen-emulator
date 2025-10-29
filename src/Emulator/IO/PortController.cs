@@ -54,6 +54,9 @@ public class PortController
         deviceBasePorts[device] = baseAddress;
         return true;
     }
+
+    public IDevice? GetDeviceFromPort(int address)
+        => ports[address].ConnectedDevice;
     
     /// <summary>
     /// Disconnects a device from all its ports.
