@@ -115,46 +115,12 @@ public class SerialTerminal : IDevice
 
     private void PrintChar(byte asciiChar)
     {
-        switch (asciiChar)
-        {
-            case 0x7F: // Delete
-                Console.Write("\u001B[1D \u001B[1D");
-                break;
-            case 0x08: // Backspace
-                Console.Write("\b \b");
-                break;
-            case 0x09: // Tab
-                Console.Write('\t');
-                break;
-            case 0x0A: // LF
-                Console.Write("\n");
-                break;
-            case 0x0D: // CR
-                Console.Write('\r');
-                break;
-            default:
-                if (asciiChar >= 0x20 && asciiChar <= 0x7E)
-                    Console.Write((char)asciiChar);
-                else
-                    Console.Write((char)asciiChar);
-                break;
-        }
+        Console.Write((char)asciiChar);
     }
 
     private void ExecuteCSI(List<byte> seq)
     {
-        char final = (char)seq[^1];
-        switch (final)
-        {
-            case 'A': Console.Write("\u001B[1A"); break; // Up
-            case 'B': Console.Write("\u001B[1B"); break; // Down
-            case 'C': Console.Write("\u001B[1C"); break; // Right
-            case 'D': Console.Write("\u001B[1D"); break; // Left
-            default:
-                // Fallback: print raw sequence
-                foreach (var b in seq) PrintChar(b);
-                break;
-        }
+        foreach (var b in seq) PrintChar(b);
     }
 
     public Task StartAsync()
