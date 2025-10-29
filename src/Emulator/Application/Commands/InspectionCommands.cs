@@ -43,12 +43,7 @@ public static class InspectionCommands
         Console.Write("  Bank Size:    ");
         Console.ResetColor();
         Console.WriteLine($"256 bytes");
-        
-        Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.Write("  Stack Ptr:    ");
-        Console.ResetColor();
-        Console.WriteLine($"0x{state.RAM.StackPointer:X4}");
-        
+
         Console.WriteLine();
         
         Console.ForegroundColor = ConsoleColor.DarkGray;
@@ -123,6 +118,11 @@ public static class InspectionCommands
         Console.Write("  Total Pages:  ");
         Console.ResetColor();
         Console.WriteLine($"256");
+        
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.Write("  Stack Ptr:    ");
+        Console.ResetColor();
+        Console.WriteLine($"0x{state.RAM.StackPointer:X4}");
         
         Console.WriteLine();
         

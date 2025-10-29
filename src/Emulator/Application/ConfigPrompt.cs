@@ -2,29 +2,37 @@ namespace Emulator.Application;
 
 public class ConfigPrompt
 {
-    public EmulatorConfig PromptUserForConfig()
+    public EmulatorConfig PromptUserForConfig(string? filePathArg = null)
     {
         Console.WriteLine("Configuration Setup");
         Console.WriteLine("═══════════════════\n");
-        
-        string? filePath;
 
-retryFile:
+        string? filePath = filePathArg;
+
+        if (!string.IsNullOrWhiteSpace(filePath))
+            goto validateFile;
+
+promptFile:
         Console.Write("ROM file path: ");
         filePath = Console.ReadLine();
-        
+
         if (string.IsNullOrWhiteSpace(filePath))
         {
             Console.WriteLine("  ⚠ Path cannot be empty");
-            goto retryFile;
+            goto promptFile;
         }
-        
+
+validateFile:
         if (!File.Exists(filePath))
         {
             Console.WriteLine($"  ⚠ File not found: {filePath}");
-            goto retryFile;
+            if (filePathArg is null)
+                goto promptFile; // only retry interactively
+            else
+                Environment.Exit(1);
         }
-            
+
+        Console.WriteLine($"✓ Using ROM: {filePath}\n");            
         
         // Clock speed with default
         Console.Write("Clock speed (Hz) [default: 1000]: ");

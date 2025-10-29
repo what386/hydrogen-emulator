@@ -71,7 +71,8 @@ public class MainMemory
         SetPage(physicalStackPointer / BANK_SIZE);
         bank.Write((physicalStackPointer % BANK_SIZE) - offset, data);
         bank.isDirty = true;
-        virtualStackPointer = virtualStackPointer + 1;
+
+        virtualStackPointer++;
     }
     
     public byte Pop(int offset)
@@ -82,8 +83,9 @@ public class MainMemory
             return 0;
         }
         
-        virtualStackPointer = virtualStackPointer - 1;
+        virtualStackPointer--;
         SetPage(physicalStackPointer / BANK_SIZE);
+
         return bank.Read((physicalStackPointer % BANK_SIZE) - offset);
     }
     

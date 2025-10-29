@@ -1,226 +1,265 @@
 namespace Emulator.IO.Devices;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+
 /// <summary>
 /// Serial Terminal device with 7-bit ASCII and even parity.
 /// Emulates a UART-style serial interface similar to 8250/16550.
 /// 
-/// PORT MAP (requires 2 consecutive ports):
+/// PORT MAP:
 /// Offset 0: DATA - Read/Write data register
-///   - Write: Send character to terminal (with parity in bit 7)
-///   - Read: Receive character from keyboard (with parity in bit 7)
 /// Offset 1: STATUS - Read status flags
-///   - Bit 0: RX_READY - Set when character available to read
-///   - Bit 1: TX_READY - Set when ready to transmit (always 1)
-///   - Bit 7: PARITY_ERROR - Set when last received char had parity error
 /// 
 /// DATA FORMAT:
-/// Bits 0-6: 7-bit ASCII character
-/// Bit 7: Even parity bit
+/// Bits 0-6: 7-bit ASCII
+/// Bit 7: Even parity
 /// </summary>
 public class SerialTerminal : IDevice
 {
-    // IDevice implementation
     public int PortCount => 2;
     public event EventHandler<InterruptRequestedEventArgs>? RequestInterrupt;
     public event EventHandler<DeviceWriteEventArgs>? WriteToPort;
-    
+
     private readonly byte _interruptVector;
     private CancellationTokenSource? _cts;
     private bool _isRunning;
     private readonly object _lock = new();
-    
-    // Input buffer (single character for now)
+
     private byte _inputBuffer;
     private bool _inputReady;
     private bool _parityError;
-    
-    // Port offsets
+
     private const int PORT_DATA = 0;
     private const int PORT_STATUS = 1;
-    
-    // Status flags
     private const byte STATUS_RX_READY = 0x01;
     private const byte STATUS_TX_READY = 0x02;
     private const byte STATUS_PARITY_ERROR = 0x80;
-    
-    public SerialTerminal(byte interruptVector = 0x08)
-    {
-        _interruptVector = interruptVector;
-    }
-    
+
+    // Input FSM for escape sequences
+    private enum EscapeState { Ground, Escape, CSI }
+    private EscapeState _escState = EscapeState.Ground;
+    private readonly List<byte> _escBuffer = new();
+
+    // Output FSM for escape sequences
+    private EscapeState _outState = EscapeState.Ground;
+    private readonly List<byte> _outBuffer = new();
+
+    public SerialTerminal(byte interruptVector = 0x08) => _interruptVector = interruptVector;
+
     public void OnPortWrite(int offset, byte data)
     {
-        switch (offset)
-        {
-            case PORT_DATA:
-                // Transmit character to terminal
-                TransmitCharacter(data);
-                break;
-                
-            case PORT_STATUS:
-                // STATUS is read-only, ignore writes
-                break;
-        }
+        if (offset == PORT_DATA)
+            TransmitCharacter(data);
     }
-    
+
     public void OnPortRead(int offset)
     {
         if (offset == PORT_DATA)
         {
-            lock (_lock)
-            {
-                _inputReady = false;
-            }
-        } 
+            lock (_lock) _inputReady = false;
+        }
     }
-    
+
     private void TransmitCharacter(byte data)
     {
-        // Extract 7-bit ASCII (bits 0-6)
         byte asciiChar = (byte)(data & 0x7F);
-        
-        // Extract parity bit (bit 7)
         bool parityBit = (data & 0x80) != 0;
-        
-        // Calculate even parity for the 7 data bits
         bool calculatedParity = CalculateEvenParity(asciiChar);
-    
-        // Verify parity
+
         if (parityBit != calculatedParity)
         {
             Console.Write($"[PARITY ERROR: 0x{data:X2}] ");
             return;
         }
-        
-        // Display the character
+
+        // Output FSM
+        switch (_outState)
+        {
+            case EscapeState.Ground:
+                if (asciiChar == 0x1B) // ESC
+                {
+                    _outState = EscapeState.Escape;
+                    _outBuffer.Clear();
+                    _outBuffer.Add(asciiChar);
+                }
+                else
+                {
+                    PrintChar(asciiChar);
+                }
+                break;
+
+            case EscapeState.Escape:
+                _outBuffer.Add(asciiChar);
+                if (asciiChar == (byte)'[')
+                    _outState = EscapeState.CSI;
+                else
+                {
+                    // Standalone ESC
+                    foreach (var b in _outBuffer) PrintChar(b);
+                    _outState = EscapeState.Ground;
+                }
+                break;
+
+            case EscapeState.CSI:
+                _outBuffer.Add(asciiChar);
+                if (asciiChar >= 0x40 && asciiChar <= 0x7E)
+                {
+                    ExecuteCSI(_outBuffer);
+                    _outState = EscapeState.Ground;
+                }
+                break;
+        }
+    }
+
+    private void PrintChar(byte asciiChar)
+    {
         switch (asciiChar)
         {
+            case 0x7F: // Delete
+                Console.Write("\u001B[1D \u001B[1D");
+                break;
             case 0x08: // Backspace
-                Console.Write("\b \b"); // Backspace, space, backspace
+                Console.Write("\b \b");
                 break;
             case 0x09: // Tab
                 Console.Write('\t');
                 break;
-            case 0x0A: // Line feed
-                Console.WriteLine();
+            case 0x0A: // LF
+                Console.Write("\n");
                 break;
-            case 0x0D: // Carriage return
+            case 0x0D: // CR
                 Console.Write('\r');
                 break;
-            case >= 0x20 and <= 0x7E: // Printable ASCII
-                Console.Write((char)asciiChar);
-                break;
-            default: // Non-printable character
-                Console.Write((char)asciiChar);
+            default:
+                if (asciiChar >= 0x20 && asciiChar <= 0x7E)
+                    Console.Write((char)asciiChar);
+                else
+                    Console.Write((char)asciiChar);
                 break;
         }
     }
-    
+
+    private void ExecuteCSI(List<byte> seq)
+    {
+        char final = (char)seq[^1];
+        switch (final)
+        {
+            case 'A': Console.Write("\u001B[1A"); break; // Up
+            case 'B': Console.Write("\u001B[1B"); break; // Down
+            case 'C': Console.Write("\u001B[1C"); break; // Right
+            case 'D': Console.Write("\u001B[1D"); break; // Left
+            default:
+                // Fallback: print raw sequence
+                foreach (var b in seq) PrintChar(b);
+                break;
+        }
+    }
+
     public Task StartAsync()
     {
         lock (_lock)
         {
-            if (_isRunning)
-                return Task.CompletedTask;
-            
+            if (_isRunning) return Task.CompletedTask;
             _isRunning = true;
             _inputReady = false;
             _parityError = false;
             _inputBuffer = 0;
             _cts = new CancellationTokenSource();
         }
-        
-        // Start keyboard input monitoring in background
+
         _ = Task.Run(() => MonitorKeyboardInputAsync(_cts.Token));
-        
         Console.WriteLine("[Serial Terminal Started - 7-bit ASCII, Even Parity]");
         return Task.CompletedTask;
     }
-    
+
     public Task StopAsync()
     {
         lock (_lock)
         {
-            if (!_isRunning)
-                return Task.CompletedTask;
-            
+            if (!_isRunning) return Task.CompletedTask;
             _isRunning = false;
             _cts?.Cancel();
             _cts?.Dispose();
             _cts = null;
         }
-        
+
         Console.WriteLine("\n[Serial Terminal Stopped]");
         return Task.CompletedTask;
     }
-    
+
     private async Task MonitorKeyboardInputAsync(CancellationToken ct)
     {
         try
         {
             while (!ct.IsCancellationRequested)
             {
-                // Check if key is available without blocking
                 if (Console.KeyAvailable)
                 {
                     var key = Console.ReadKey(intercept: true);
                     byte asciiValue = (byte)key.KeyChar;
-                    
-                    // Only process 7-bit ASCII
+
+                    // Handle Enter / LF
+                    if (key.Key == ConsoleKey.Enter) asciiValue = 0x0D;
+                    else if (asciiValue == 0x0A) asciiValue = 0x0A; // Ctrl+J
+
                     if (asciiValue <= 0x7F)
                     {
                         lock (_lock)
                         {
-                            // Don't overwrite unread input
                             if (!_inputReady)
-                            {
-                                // Calculate even parity
-                                bool parity = CalculateEvenParity(asciiValue);
-                                
-                                // Construct byte with parity bit in MSB
-                                _inputBuffer = (byte)(asciiValue | (parity ? 0x80 : 0x00));
-                                _inputReady = true;
-                                _parityError = false;
-                                
-                                // Immediately write to port
-                                WriteToPort?.Invoke(this, new DeviceWriteEventArgs(PORT_DATA, _inputBuffer));
-                                
-                                // Also write updated status
-                                byte status = STATUS_TX_READY | STATUS_RX_READY;
-                                WriteToPort?.Invoke(this, new DeviceWriteEventArgs(PORT_STATUS, status));
-                                
-                                // Request interrupt to notify processor of new data
-                                RequestInterrupt?.Invoke(this, new InterruptRequestedEventArgs(_interruptVector));
-                            }
+                                ProcessAsciiByte(asciiValue);
                         }
                     }
                 }
-                
-                // Small delay to prevent tight loop
+
                 await Task.Delay(10, ct);
             }
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException) { }
+    }
+
+    private void ProcessAsciiByte(byte b)
+    {
+        switch (_escState)
         {
-            // Expected when stopping
+            case EscapeState.Ground:
+                if (b == 0x1B) { _escState = EscapeState.Escape; _escBuffer.Clear(); _escBuffer.Add(b); }
+                else SendByteToPort(b);
+                break;
+
+            case EscapeState.Escape:
+                _escBuffer.Add(b);
+                if (b == (byte)'[') _escState = EscapeState.CSI;
+                else { foreach (var by in _escBuffer) SendByteToPort(by); _escState = EscapeState.Ground; }
+                break;
+
+            case EscapeState.CSI:
+                _escBuffer.Add(b);
+                if (b >= 0x40 && b <= 0x7E) { foreach (var by in _escBuffer) SendByteToPort(by); _escState = EscapeState.Ground; }
+                break;
         }
     }
-    
+
+    private void SendByteToPort(byte asciiValue)
+    {
+        bool parity = CalculateEvenParity(asciiValue);
+        _inputBuffer = (byte)(asciiValue | (parity ? 0x80 : 0x00));
+        _inputReady = true;
+        _parityError = false;
+
+        WriteToPort?.Invoke(this, new DeviceWriteEventArgs(PORT_DATA, _inputBuffer));
+        byte status = STATUS_TX_READY | STATUS_RX_READY;
+        WriteToPort?.Invoke(this, new DeviceWriteEventArgs(PORT_STATUS, status));
+        RequestInterrupt?.Invoke(this, new InterruptRequestedEventArgs(_interruptVector));
+    }
+
     private bool CalculateEvenParity(byte value)
     {
-        // Count number of 1 bits in the 7-bit value
         int count = 0;
         byte temp = (byte)(value & 0x7F);
-        
-        while (temp != 0)
-        {
-            count += temp & 1;
-            temp >>= 1;
-        }
-
-        // Even parity: return true if odd number of bits (to make total even)
+        while (temp != 0) { count += temp & 1; temp >>= 1; }
         return (count & 1) == 1;
     }
 }
