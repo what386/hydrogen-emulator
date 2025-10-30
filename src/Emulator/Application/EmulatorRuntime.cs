@@ -82,6 +82,7 @@ public class EmulatorRuntime
         Console.Write("Connecting devices... ");
         Console.ResetColor();
         state.PortController.ConnectDevice(0, new SerialTerminal());
+        state.PortController.ConnectDevice(2, new FloatingPointUnit());
         _ = state.PortController.StartAllDevicesAsync();
         Console.ForegroundColor = ConsoleColor.Green;
         Console.WriteLine("✓");

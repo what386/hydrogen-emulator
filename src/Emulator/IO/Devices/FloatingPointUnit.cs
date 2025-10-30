@@ -4,7 +4,7 @@ using System;
 using System.Threading.Tasks;
 
 /// <summary>
-/// Floating Point Unit (FPU) co-processor peripheral
+/// Floating Point Unit (FPU) peripheral
 /// Supports 32-bit IEEE-754 single-precision floating point operations.
 /// 
 /// PORT MAP (requires 8 consecutive ports):
@@ -264,6 +264,8 @@ public class FloatingPointUnit : IDevice
         status = STATUS_READY;
         selectedRegister = 0;
         control = 0x00;
+
+        Console.WriteLine("[Floating Point Unit Started]");
         
         return Task.CompletedTask;
     }

@@ -6,7 +6,6 @@ public class Clock
 {
     private int clockSpeedHz = 10;
     public int ClockSpeedHz => clockSpeedHz;
-    //private const int clockSpeedHz = 10000; // 10 KHz
     
     private Thread? clockThread;
     private CancellationTokenSource? cancellationTokenSource;
