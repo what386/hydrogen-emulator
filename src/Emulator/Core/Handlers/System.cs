@@ -79,6 +79,7 @@ public static class System
                 break;
             
             case 7:
+                state.IntVector.RequestInterrupt((byte)instruction.ValueY, state.Registers.Read(0));
                 break;
         }
         state.PC.Increment();
