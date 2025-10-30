@@ -79,6 +79,7 @@ public static class System
                 break;
             
             case 7:
+                state.ControlWord.SetFlag(ControlWord.KERNEL_MODE, true);
                 state.IntVector.RequestInterrupt((byte)instruction.ValueY, state.Registers.Read(0));
                 break;
         }
